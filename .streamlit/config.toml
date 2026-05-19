@@ -8,7 +8,5 @@ font                   = "sans serif"
 
 [server]
 headless = true
-port = 8080
-address = "0.0.0.0"
-enableCORS = false
-enableXsrfProtection = false
+# port and address are NOT set here — Streamlit Community Cloud manages these.
+# Cloud Run overrides them via CLI args in the Dockerfile CMD.
