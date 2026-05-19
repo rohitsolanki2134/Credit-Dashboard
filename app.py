@@ -1792,16 +1792,17 @@ def _update_env_password(new_password: str) -> tuple:
       persisted — password written to .env on disk (False on read-only filesystems
                   such as Streamlit Community Cloud)
     """
+    import os as _os
     import re as _re
     import config as _cfg
 
     # Always apply to the live config so sending works immediately this session
     _cfg.SMTP_PASSWORD = new_password
-    os.environ["SMTP_PASSWORD"] = new_password
+    _os.environ["SMTP_PASSWORD"] = new_password
 
     # Attempt to persist to .env (works locally; skipped on read-only deployments)
-    env_path = os.path.join(os.path.dirname(__file__), ".env")
-    if os.path.exists(env_path):
+    env_path = _os.path.join(_os.path.dirname(__file__), ".env")
+    if _os.path.exists(env_path):
         try:
             text = open(env_path, encoding="utf-8").read()
             text = _re.sub(r"(?m)^SMTP_PASSWORD=.*$", f"SMTP_PASSWORD={new_password}", text)
