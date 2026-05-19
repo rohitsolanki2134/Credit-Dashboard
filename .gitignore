@@ -1,11 +1,10 @@
 # ── Secrets & credentials — NEVER commit these ────────────────────────────────
 .env
 *.env.local
+.streamlit/secrets.toml
 
-# ── Database — contains client evaluation data ────────────────────────────────
-*.db
-*.sqlite
-*.sqlite3
+# ── Database — included so history travels with the repo ──────────────────────
+# *.db  ← intentionally NOT excluded (credit_dashboard.db is committed)
 
 # ── Python cache ──────────────────────────────────────────────────────────────
 __pycache__/
