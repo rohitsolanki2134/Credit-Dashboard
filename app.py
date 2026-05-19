@@ -1946,17 +1946,15 @@ def _email_dialog(r: dict):
             else:
                 ok, persisted = _update_env_password(new_pw)
                 if ok and persisted:
-                    st.toast("✅ Password saved to .env and active.", icon="✅")
-                    st.rerun()
+                    st.success("✅ Password saved and active — you can now send emails.")
                 elif ok and not persisted:
-                    st.toast("✅ Password active for this session.", icon="✅")
+                    st.success("✅ Password active for this session.")
                     st.info(
-                        "**Running on Streamlit Cloud?** The password change is active "
-                        "for this session only. To make it permanent, go to your app's "
+                        "**On Streamlit Cloud?** To make it permanent go to "
                         "**Settings → Secrets** and update `SMTP_PASSWORD` there.",
                         icon="ℹ️",
                     )
-                    st.rerun()
+                # No st.rerun() here — calling rerun() inside a dialog closes it
 
     st.markdown('<hr style="border:none;border-top:1px solid #E2E8F0;margin:10px 0">',
                 unsafe_allow_html=True)
@@ -1972,7 +1970,20 @@ def _email_dialog(r: dict):
                  use_container_width=True,
                  disabled=not smtp_ok or n_rec == 0):
         with st.spinner(f"Sending to {n_rec} recipient(s)…"):
-            ok, msg = send_result(r, st.session_state["email_recipients"])
+            # Pass credentials directly — bypasses config module cache which
+            # may hold stale empty values loaded before st.secrets were available
+            from email_sender import build_cfo_email as _build_email, send_email as _send_email
+            _subject, _html = _build_email(r)
+            ok, msg = _send_email(
+                recipients     = st.session_state["email_recipients"],
+                subject        = _subject,
+                html_body      = _html,
+                smtp_host      = _os.environ.get("SMTP_HOST", _cfg.SMTP_HOST),
+                smtp_port      = int(_os.environ.get("SMTP_PORT", _cfg.SMTP_PORT)),
+                smtp_user      = smtp_user,
+                smtp_password  = smtp_password,
+                sender_address = smtp_from,
+            )
 
         if ok:
             # ── SUCCESS — prominent banner + toast + auto-close ──────────
