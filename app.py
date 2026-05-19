@@ -1783,21 +1783,36 @@ def render_snapshot(r: dict):
     _render_critical_summary(r)
 
 
-def _update_env_password(new_password: str) -> bool:
-    """Overwrite SMTP_PASSWORD in the .env file on disk and reload config."""
+def _update_env_password(new_password: str) -> tuple:
+    """
+    Update SMTP_PASSWORD for the current session and persist if possible.
+
+    Returns (success: bool, persisted: bool)
+      success   — password applied to live config (always True if no exception)
+      persisted — password written to .env on disk (False on read-only filesystems
+                  such as Streamlit Community Cloud)
+    """
     import re as _re
+    import config as _cfg
+
+    # Always apply to the live config so sending works immediately this session
+    _cfg.SMTP_PASSWORD = new_password
+    os.environ["SMTP_PASSWORD"] = new_password
+
+    # Attempt to persist to .env (works locally; skipped on read-only deployments)
     env_path = os.path.join(os.path.dirname(__file__), ".env")
-    try:
-        text = open(env_path, encoding="utf-8").read()
-        text = _re.sub(r"(?m)^SMTP_PASSWORD=.*$", f"SMTP_PASSWORD={new_password}", text)
-        open(env_path, "w", encoding="utf-8").write(text)
-        # Patch the live config module so the change takes effect without restart
-        import config as _cfg
-        _cfg.SMTP_PASSWORD = new_password
-        return True
-    except Exception as exc:
-        log.error("Could not update .env: %s", exc)
-        return False
+    if os.path.exists(env_path):
+        try:
+            text = open(env_path, encoding="utf-8").read()
+            text = _re.sub(r"(?m)^SMTP_PASSWORD=.*$", f"SMTP_PASSWORD={new_password}", text)
+            open(env_path, "w", encoding="utf-8").write(text)
+            log.info("SMTP_PASSWORD updated in .env")
+            return True, True
+        except Exception as exc:
+            log.warning("Could not write .env (read-only fs?): %s", exc)
+            return True, False
+
+    return True, False
 
 
 @st.dialog("📧 Email Credit Report", width="large")
@@ -1905,10 +1920,18 @@ def _email_dialog(r: dict):
                 st.error("Password cannot be empty.")
             elif new_pw != new_pw2:
                 st.error("Passwords do not match — please check and retry.")
-            elif _update_env_password(new_pw):
-                st.toast("✅ Password saved successfully.", icon="✅")
             else:
-                st.error("❌ Could not write to .env — check file permissions.")
+                ok, persisted = _update_env_password(new_pw)
+                if ok and persisted:
+                    st.toast("✅ Password saved to .env and active.", icon="✅")
+                elif ok and not persisted:
+                    st.toast("✅ Password active for this session.", icon="✅")
+                    st.info(
+                        "**Running on Streamlit Cloud?** The password change is active "
+                        "for this session only. To make it permanent, go to your app's "
+                        "**Settings → Secrets** and update `SMTP_PASSWORD` there.",
+                        icon="ℹ️",
+                    )
 
     st.markdown('<hr style="border:none;border-top:1px solid #E2E8F0;margin:10px 0">',
                 unsafe_allow_html=True)
