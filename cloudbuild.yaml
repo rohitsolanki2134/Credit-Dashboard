@@ -1,0 +1,120 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Cloud Build CI/CD — TravelPlus Credit Dashboard
+# ─────────────────────────────────────────────────────────────────────────────
+# Trigger manually:
+#   gcloud builds submit --config cloudbuild.yaml
+#
+# Or connect a GitHub / Cloud Source Repo trigger in the GCP Console so every
+# push to main auto-deploys.
+#
+# ── Prerequisites (run ONCE before first deploy) ──────────────────────────────
+# 1. Set your project:
+#      gcloud config set project YOUR_PROJECT_ID
+#
+# 2. Enable APIs:
+#      gcloud services enable cloudbuild.googleapis.com \
+#                             run.googleapis.com \
+#                             secretmanager.googleapis.com \
+#                             containerregistry.googleapis.com
+#
+# 3. Create secrets for sensitive values:
+#      echo -n "sk-ant-api03-..." | gcloud secrets create ANTHROPIC_API_KEY --data-file=-
+#      echo -n "btcinvoice@travelplusapp.com" | gcloud secrets create SMTP_USER --data-file=-
+#      echo -n "vdmuqcpnzraeabws" | gcloud secrets create SMTP_PASSWORD --data-file=-
+#
+# 4. Grant Cloud Build SA the required roles:
+#      PROJECT_NUMBER=$(gcloud projects describe YOUR_PROJECT_ID --format='value(projectNumber)')
+#      gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+#        --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+#        --role="roles/run.admin"
+#      gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+#        --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+#        --role="roles/secretmanager.secretAccessor"
+#      gcloud iam service-accounts add-iam-policy-binding \
+#        ${PROJECT_NUMBER}-compute@developer.gserviceaccount.com \
+#        --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+#        --role="roles/iam.serviceAccountUser"
+# ─────────────────────────────────────────────────────────────────────────────
+
+substitutions:
+  _REGION: asia-south1          # Mumbai — change if needed (e.g. us-central1)
+  _SERVICE: credit-dashboard
+  _IMAGE: gcr.io/$PROJECT_ID/$_SERVICE
+
+steps:
+  # ── 1. Build the container image ───────────────────────────────────────────
+  - name: gcr.io/cloud-builders/docker
+    id: build
+    args:
+      - build
+      - -t
+      - $_IMAGE:$COMMIT_SHA
+      - -t
+      - $_IMAGE:latest
+      - .
+
+  # ── 2. Push both tags to Container Registry ────────────────────────────────
+  - name: gcr.io/cloud-builders/docker
+    id: push
+    args: [push, --all-tags, $_IMAGE]
+    waitFor: [build]
+
+  # ── 3. Deploy to Cloud Run ─────────────────────────────────────────────────
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: deploy
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - $_SERVICE
+      - --image=$_IMAGE:$COMMIT_SHA
+      - --region=$_REGION
+      - --platform=managed
+      - --port=8080
+      - --memory=1Gi
+      - --cpu=1
+      - --concurrency=10
+      - --min-instances=0           # scales to zero when idle (cost saving)
+      - --max-instances=3
+      - --timeout=300
+      - --allow-unauthenticated     # remove this line to require Google login
+
+      # ── Sensitive values — pulled from Secret Manager ─────────────────────
+      # These are the three values from your .env that must never be in plain text.
+      - >-
+        --set-secrets=
+        ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,
+        SMTP_USER=SMTP_USER:latest,
+        SMTP_PASSWORD=SMTP_PASSWORD:latest
+
+      # ── Non-sensitive config — mirrors your .env exactly ─────────────────
+      - >-
+        --set-env-vars=
+        LLM_PROVIDER=anthropic,
+        LLM_MODEL=claude-sonnet-4-5,
+        LLM_LITE_MODEL=claude-haiku-4-5,
+        SMTP_HOST=smtp.gmail.com,
+        SMTP_PORT=587,
+        SMTP_FROM=btcinvoice@travelplusapp.com,
+        DB_PATH=/app/credit_dashboard.db
+
+      # ── DB note ───────────────────────────────────────────────────────────
+      # DB_PATH=/app/credit_dashboard.db  →  the existing history DB is baked
+      # into the image (see .dockerignore) so all past evaluations are visible
+      # on first load.  New evaluations are written here during the container's
+      # lifetime and persist until the next deploy.
+      #
+      # For PERMANENT history across deploys, mount a Cloud Storage bucket:
+      #   --add-volume=name=db-vol,type=cloud-storage,bucket=YOUR_BUCKET
+      #   --add-volume-mount=volume=db-vol,mount-path=/data
+      # and change DB_PATH=/data/credit_dashboard.db
+    waitFor: [push]
+
+images:
+  - $_IMAGE:$COMMIT_SHA
+  - $_IMAGE:latest
+
+timeout: 1200s
+
+options:
+  logging: CLOUD_LOGGING_ONLY

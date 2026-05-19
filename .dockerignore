@@ -1,0 +1,48 @@
+# ── Python cache ──────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Environment & secrets (NEVER bake into the image — passed via Cloud Run) ───
+.env
+*.env.local
+*.env.*.local
+
+# ── Database: credit_dashboard.db is INCLUDED (existing history travels with
+#    the image). New evaluations written during a session are stored in-container
+#    and persist until the next deploy/restart. For permanent persistence across
+#    restarts, mount a Cloud Storage volume (see cloudbuild.yaml notes).
+# *.db  ← intentionally NOT excluded
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+streamlit_err.log
+streamlit_out.log
+
+# ── Dev / test files ──────────────────────────────────────────────────────────
+_test_*.py
+_diag_*.py
+smoke_test.py
+test_pdfs.py
+analyze_pdfs.py
+*.bak
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ── IDE & OS ──────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ── Docs (not needed at runtime) ──────────────────────────────────────────────
+SETUP.md

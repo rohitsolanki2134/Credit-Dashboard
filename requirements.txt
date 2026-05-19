@@ -1,0 +1,26 @@
+# Core UI
+streamlit>=1.35.0,<2.0.0
+pandas>=2.1.0,<3.0.0
+numpy>=1.26.0,<3.0.0
+plotly>=5.19.0,<6.0.0
+
+# Excel / spreadsheet
+openpyxl>=3.1.2
+
+# PDF parsing
+pdfplumber>=0.11.0
+PyMuPDF>=1.24.0
+
+# Image processing (transitive dep of PyMuPDF; also used by Pillow-based OCR)
+Pillow>=10.0.0
+
+# AI providers
+anthropic>=0.49.0
+openai>=1.30.0
+
+# News / web data
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Environment variables
+python-dotenv>=1.0.0

@@ -1,0 +1,35 @@
+# ── Secrets & credentials — NEVER commit these ────────────────────────────────
+.env
+*.env.local
+
+# ── Database — contains client evaluation data ────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Python cache ──────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+streamlit_err.log
+streamlit_out.log
+
+# ── Dev / test scratch files ──────────────────────────────────────────────────
+_test_*.py
+_diag_*.py
+*.bak
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
