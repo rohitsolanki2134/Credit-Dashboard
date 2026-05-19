@@ -1851,10 +1851,12 @@ def _email_dialog(r: dict):
 
     # ── Status bar ───────────────────────────────────────────────────────
     if smtp_ok:
+        pw_hint = ("*" * (len(smtp_password) - 4) + smtp_password[-4:]) if len(smtp_password) > 4 else "****"
         st.markdown(
             f'<div style="background:#D1FAE5;border-left:4px solid #16A34A;'
             f'border-radius:6px;padding:7px 14px;font-size:12px;color:#065F46">'
-            f'✅ Sending from <strong>{smtp_from}</strong></div>',
+            f'✅ Sending from <strong>{smtp_from}</strong> &nbsp;·&nbsp; '
+            f'password ending: <code>{pw_hint}</code></div>',
             unsafe_allow_html=True,
         )
     else:
