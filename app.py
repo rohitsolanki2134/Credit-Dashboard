@@ -1818,6 +1818,7 @@ def _update_env_password(new_password: str) -> tuple:
 
 @st.dialog("📧 Email Credit Report", width="large")
 def _email_dialog(r: dict):
+    import os as _os
     import re as _re, base64 as _b64
     import config as _cfg
 
@@ -1825,14 +1826,35 @@ def _email_dialog(r: dict):
     if "email_recipients" not in st.session_state:
         st.session_state["email_recipients"] = list(DEFAULT_EMAIL_RECIPIENTS)
 
-    smtp_ok = bool(_cfg.SMTP_USER and _cfg.SMTP_PASSWORD)
+    # Read credentials fresh each render — config module vars may be stale if
+    # they were empty at import time (e.g. Streamlit Cloud secrets loaded late).
+    # Priority: config module (already patched by _update_env_password) →
+    #           os.environ → st.secrets
+    def _get_cred(key: str, cfg_val: str) -> str:
+        if cfg_val:
+            return cfg_val
+        v = _os.environ.get(key, "")
+        if not v:
+            try:
+                v = st.secrets.get(key, "")
+            except Exception:
+                pass
+        if v and not cfg_val:
+            # Back-fill config module so email_sender also picks it up
+            setattr(_cfg, key, v)
+        return v
+
+    smtp_user     = _get_cred("SMTP_USER",     _cfg.SMTP_USER)
+    smtp_password = _get_cred("SMTP_PASSWORD", _cfg.SMTP_PASSWORD)
+    smtp_from     = _get_cred("SMTP_FROM",     _cfg.SMTP_FROM) or smtp_user
+    smtp_ok       = bool(smtp_user and smtp_password)
 
     # ── Status bar ───────────────────────────────────────────────────────
     if smtp_ok:
         st.markdown(
             f'<div style="background:#D1FAE5;border-left:4px solid #16A34A;'
             f'border-radius:6px;padding:7px 14px;font-size:12px;color:#065F46">'
-            f'✅ Sending from <strong>{_cfg.SMTP_FROM}</strong></div>',
+            f'✅ Sending from <strong>{smtp_from}</strong></div>',
             unsafe_allow_html=True,
         )
     else:
@@ -1925,6 +1947,7 @@ def _email_dialog(r: dict):
                 ok, persisted = _update_env_password(new_pw)
                 if ok and persisted:
                     st.toast("✅ Password saved to .env and active.", icon="✅")
+                    st.rerun()
                 elif ok and not persisted:
                     st.toast("✅ Password active for this session.", icon="✅")
                     st.info(
@@ -1933,6 +1956,7 @@ def _email_dialog(r: dict):
                         "**Settings → Secrets** and update `SMTP_PASSWORD` there.",
                         icon="ℹ️",
                     )
+                    st.rerun()
 
     st.markdown('<hr style="border:none;border-top:1px solid #E2E8F0;margin:10px 0">',
                 unsafe_allow_html=True)
