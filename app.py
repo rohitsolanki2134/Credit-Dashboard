@@ -60,6 +60,27 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------------------------
+# Bridge st.secrets → os.environ → config module
+# Must run AFTER set_page_config (first Streamlit call) and BEFORE any module
+# reads config values. Handles Streamlit Community Cloud where there is no .env
+# and all credentials live in the Streamlit secrets dashboard.
+# ---------------------------------------------------------------------------
+import os as _os
+import config as _config_mod
+
+try:
+    for _sk, _sv in st.secrets.items():
+        if isinstance(_sv, str):
+            # Push into os.environ so any future os.getenv() calls pick it up
+            if _sk not in _os.environ:
+                _os.environ[_sk] = _sv
+            # Also patch the already-imported config module attributes directly
+            if hasattr(_config_mod, _sk) and not getattr(_config_mod, _sk):
+                setattr(_config_mod, _sk, _sv)
+except Exception:
+    pass  # Running locally with .env — st.secrets not needed
+
+# ---------------------------------------------------------------------------
 # Custom CSS
 # ---------------------------------------------------------------------------
 
