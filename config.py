@@ -133,9 +133,18 @@ CREDIT_LIMIT_MAX_MULTIPLIER: float = 1.5     # strong profiles can exceed base l
 CREDIT_LIMIT_MIN_MULTIPLIER: float = 0.0     # floor at 0 (reject)
 
 # Minimum annual revenue (₹ Crores) for core credit eligibility
-# Companies below this threshold receive a lower Operational Stability score
-# and a risk flag; above it receives a positive signal.
+# Companies below this threshold receive a lower Operational Stability score,
+# a risk flag, and their composite score is hard-capped to the Risky band (≤40).
 MIN_REVENUE_CR: float = 200.0   # ₹ 200 Crores
+
+# Companies that have been explicitly rejected for credit.
+# Any evaluation matching these names (case-insensitive) will be forced to a
+# near-zero score and declined automatically, regardless of financial data.
+REJECTED_COMPANIES: list = [
+    "Packfora Solutions Private Limited",
+    "Flipspaces Technology Labs Private Limited",
+    "Merieux NutriSciences India Private Limited",
+]
 
 # Travel-spend-based credit sizing
 # Corporate travel typically runs 0.01–2.5% of revenue, scaling with company size:

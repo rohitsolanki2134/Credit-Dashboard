@@ -22,6 +22,7 @@ from config import (
     SCORING_WEIGHTS,
     RatioBenchmark,
     MIN_REVENUE_CR,
+    REJECTED_COMPANIES,
 )
 from utils import clamp, get_logger, safe_divide, score_to_band
 
@@ -639,6 +640,18 @@ def run_scoring(
     composite = sum(ss.weighted_contribution for ss in sub_scores)
     composite = clamp(composite)
 
+    # Policy override 1: companies below ₹200 Cr revenue are ineligible for
+    # standard credit and must fall in the Risky band regardless of financials.
+    _revenue_cr = (financials.get("revenue") or 0) / 10_000_000
+    if 0 < _revenue_cr < MIN_REVENUE_CR:
+        composite = min(composite, 40.0)
+
+    # Policy override 2: explicitly rejected companies receive a near-zero score.
+    _co_name_lower = (financials.get("company_name") or "").strip().lower()
+    _is_rejected = any(r.strip().lower() == _co_name_lower for r in REJECTED_COMPANIES)
+    if _is_rejected:
+        composite = 5.0
+
     band, color, emoji = score_to_band(composite)
 
     # --- Red flags ---
@@ -673,12 +686,12 @@ def run_scoring(
     }
 
     # Revenue threshold flag (₹200 Cr eligibility)
-    revenue_cr = (financials.get("revenue") or 0) / 10_000_000
+    revenue_cr = _revenue_cr   # already computed above
     if revenue_cr > 0:
         if revenue_cr < MIN_REVENUE_CR:
             red_flags.append(
                 f"Revenue ₹{revenue_cr:,.0f} Cr is below ₹{MIN_REVENUE_CR:.0f} Cr "
-                "preferred eligibility threshold"
+                "eligibility threshold — score capped to Risky band"
             )
         elif revenue_cr >= 500:
             positive_signals.append(
@@ -688,6 +701,14 @@ def run_scoring(
             positive_signals.append(
                 f"Revenue ₹{revenue_cr:,.0f} Cr — above ₹{MIN_REVENUE_CR:.0f} Cr eligibility threshold ✓"
             )
+
+    # Rejected-company flag
+    if _is_rejected:
+        red_flags.insert(0,
+            f"BLOCKED: '{financials.get('company_name', '')}' has been previously rejected "
+            "for credit — no credit facility to be extended"
+        )
+        positive_signals.clear()
 
     # Trend-specific flags
     if financials.get("revenue_py"):
