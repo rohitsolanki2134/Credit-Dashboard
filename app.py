@@ -1785,6 +1785,60 @@ def render_snapshot(r: dict):
         st.markdown(f"**AI Confidence: {ai.confidence_score:.0%}**")
         st.progress(ai.confidence_score)
 
+        # ── Company Intelligence panel ───────────────────────────────────────
+        _ext  = r.get("external") or {}
+        _arts = _ext.get("articles", [])[:2]
+        _sent = _ext.get("sentiment", "Neutral")
+        _sent_color = {"Positive": "#16A34A", "Neutral": "#D97706", "Negative": "#DC2626"}.get(_sent, "#475569")
+        _sent_dot   = {"Positive": "🟢", "Neutral": "🟡", "Negative": "🔴"}.get(_sent, "⚪")
+
+        _news_html = ""
+        for _a in _arts:
+            _url  = _a.get("url", "")
+            _ttl  = (_a.get("title", "") or "")[:65]
+            _src  = _a.get("source", "")
+            _dt   = (_a.get("date", "") or "")[:10]
+            if _url:
+                _news_html += f"<div style='margin:2px 0'>• <a href='{_url}' style='color:#2274E0;text-decoration:none'>{_ttl}</a> <span style='color:#94A3B8;font-size:10px'>— {_src} ({_dt})</span></div>"
+            else:
+                _news_html += f"<div style='margin:2px 0'>• {_ttl} <span style='color:#94A3B8;font-size:10px'>— {_src} ({_dt})</span></div>"
+
+        _card = "border-radius:8px;padding:10px 13px;margin:4px 0;font-size:12px;line-height:1.55"
+        _lbl  = "font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px"
+
+        st.markdown("<div style='margin-top:12px'></div>", unsafe_allow_html=True)
+        _ci_l, _ci_r = st.columns(2)
+        with _ci_l:
+            st.markdown(
+                f"<div style='background:#F0F7FF;border-left:3px solid #2274E0;{_card}'>"
+                f"<div style='{_lbl};color:#2274E0'>🏢 Company Overview</div>"
+                f"<div style='color:#1E3A5F'>{ai.company_overview or 'Overview not available.'}</div>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                f"<div style='background:#F5F3FF;border-left:3px solid #7C3AED;{_card}'>"
+                f"<div style='{_lbl};color:#7C3AED'>👥 Directors</div>"
+                f"<div style='color:#1E1A3F'>{ai.directors_note or 'Director information not available.'}</div>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+        with _ci_r:
+            st.markdown(
+                f"<div style='background:#F0FDF4;border-left:3px solid #16A34A;{_card}'>"
+                f"<div style='{_lbl};color:#16A34A'>💰 Recent Funding</div>"
+                f"<div style='color:#1A3A1E'>{ai.funding_note or 'No recent funding activity identified.'}</div>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                f"<div style='background:#FFFBEB;border-left:3px solid {_sent_color};{_card}'>"
+                f"<div style='{_lbl};color:{_sent_color}'>{_sent_dot} News Sentiment: {_sent}</div>"
+                f"<div style='color:#374151'>{_news_html or 'No recent news articles found.'}</div>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+
         # Parse confidence if from file
         if r["parse_confidence"] < 1.0:
             st.info(
@@ -2924,6 +2978,9 @@ def _db_row_to_result(db: dict) -> dict:
         hidden_risks         = ai_json.get("hidden_risks", []),
         suggested_conditions = ai_json.get("suggested_conditions", []),
         model_used           = ai_json.get("model_used", "stored"),
+        company_overview     = ai_json.get("company_overview", ""),
+        funding_note         = ai_json.get("funding_note", ""),
+        directors_note       = ai_json.get("directors_note", ""),
     )
 
     # ── Rebuild CreditDecision ─────────────────────────────────────────────

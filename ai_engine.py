@@ -50,6 +50,10 @@ class AIDecision:
     hidden_risks: List[str]      # less obvious concerns
     suggested_conditions: List[str]  # e.g. "Require audited statements"
     model_used: str
+    # Company intelligence — shown in snapshot + email
+    company_overview: str = ""   # 2-line: what the company does, sector, business model
+    funding_note: str = ""       # 2-line: recent funding/IPO/investment activity
+    directors_note: str = ""     # 2-line: key directors/promoters
 
 
 # ---------------------------------------------------------------------------
@@ -151,7 +155,10 @@ def _build_prompt(
       "key_risks": ["risk1", "risk2", ...],
       "positive_factors": ["factor1", "factor2", ...],
       "hidden_risks": ["hidden concern 1", ...],
-      "suggested_conditions": ["condition if approving conditionally", ...]
+      "suggested_conditions": ["condition if approving conditionally", ...],
+      "company_overview": "Two-sentence description of what this company does, its sector, and its primary business model.",
+      "funding_note": "Two-sentence note on any recent funding rounds, IPO activity, or major investments. Write 'No recent funding activity identified.' if none known.",
+      "directors_note": "Two-sentence note naming key directors or promoters and their background. Write 'Director information not available from provided data.' if unknown."
     }}
 
     Rules:
@@ -162,6 +169,7 @@ def _build_prompt(
     - risk_narrative MUST be formatted as 5–7 concise bullet points, each starting with "• ".
       Do NOT write prose paragraphs. Each bullet = one clear, data-referenced insight.
     - If prior-year data is available, include a bullet on the financial trajectory (improving/declining).
+    - company_overview, funding_note, directors_note must each be exactly 1–2 sentences (max 40 words each).
     {payment_rule}
     """).strip()
 
@@ -274,6 +282,9 @@ def _call_mock(
         "positive_factors":     positives,
         "hidden_risks":         hidden,
         "suggested_conditions": conditions,
+        "company_overview":     "Company overview not available in demo mode. Connect an API key for full AI analysis.",
+        "funding_note":         "No recent funding activity identified.",
+        "directors_note":       "Director information not available from provided data.",
     })
 
 
@@ -593,15 +604,18 @@ def run_ai_analysis(
         parsed = _extract_json(raw)
 
         return AIDecision(
-            recommendation      = parsed.get("recommendation", "CONDITIONAL"),
-            confidence_level    = parsed.get("confidence_level", "Medium"),
-            confidence_score    = float(parsed.get("confidence_score", 0.6)),
-            risk_narrative      = parsed.get("risk_narrative", ""),
-            key_risks           = parsed.get("key_risks", []),
-            positive_factors    = parsed.get("positive_factors", []),
-            hidden_risks        = parsed.get("hidden_risks", []),
-            suggested_conditions= parsed.get("suggested_conditions", []),
-            model_used          = provider,
+            recommendation       = parsed.get("recommendation", "CONDITIONAL"),
+            confidence_level     = parsed.get("confidence_level", "Medium"),
+            confidence_score     = float(parsed.get("confidence_score", 0.6)),
+            risk_narrative       = parsed.get("risk_narrative", ""),
+            key_risks            = parsed.get("key_risks", []),
+            positive_factors     = parsed.get("positive_factors", []),
+            hidden_risks         = parsed.get("hidden_risks", []),
+            suggested_conditions = parsed.get("suggested_conditions", []),
+            model_used           = provider,
+            company_overview     = parsed.get("company_overview", ""),
+            funding_note         = parsed.get("funding_note", ""),
+            directors_note       = parsed.get("directors_note", ""),
         )
 
     except Exception as exc:
@@ -610,13 +624,16 @@ def run_ai_analysis(
         raw = _call_mock(scoring_summary, external_result, has_payment=has_payment)
         parsed = json.loads(raw)
         return AIDecision(
-            recommendation      = parsed["recommendation"],
-            confidence_level    = "Low",
-            confidence_score    = 0.3,
-            risk_narrative      = f"AI analysis failed ({exc}). Showing rule-based estimate only.",
-            key_risks           = parsed["key_risks"],
-            positive_factors    = parsed["positive_factors"],
-            hidden_risks        = parsed["hidden_risks"],
-            suggested_conditions= parsed["suggested_conditions"],
-            model_used          = "fallback",
+            recommendation       = parsed["recommendation"],
+            confidence_level     = "Low",
+            confidence_score     = 0.3,
+            risk_narrative       = f"AI analysis failed ({exc}). Showing rule-based estimate only.",
+            key_risks            = parsed["key_risks"],
+            positive_factors     = parsed["positive_factors"],
+            hidden_risks         = parsed["hidden_risks"],
+            suggested_conditions = parsed["suggested_conditions"],
+            model_used           = "fallback",
+            company_overview     = parsed.get("company_overview", ""),
+            funding_note         = parsed.get("funding_note", ""),
+            directors_note       = parsed.get("directors_note", ""),
         )

@@ -194,6 +194,33 @@ def build_cfo_email(result: dict) -> Tuple[str, str]:
     sent_color_val = sent_color_map.get(sentiment, "#475569")
     sent_dot       = {"Positive": "🟢", "Neutral": "🟡", "Negative": "🔴"}.get(sentiment, "⚪")
 
+    # ── Company Intelligence ─────────────────────────────────────────────────
+    _co_overview  = getattr(ai, "company_overview",  "") or "Overview not available."
+    _co_funding   = getattr(ai, "funding_note",      "") or "No recent funding activity identified."
+    _co_directors = getattr(ai, "directors_note",    "") or "Director information not available."
+
+    # News articles with clickable links (email)
+    _articles = ext.get("articles", [])[:3]
+    _news_links_html = ""
+    for _a in _articles:
+        _url  = _a.get("url", "")
+        _ttl  = (_a.get("title", "") or "")[:70]
+        _src  = _a.get("source", "")
+        _dt   = (_a.get("date", "") or "")[:10]
+        if _url:
+            _news_links_html += (
+                f'<div style="margin:3px 0;font-size:12px">• '
+                f'<a href="{_url}" style="color:#2274E0;text-decoration:none">{_ttl}</a>'
+                f' <span style="color:#94A3B8;font-size:11px">— {_src} ({_dt})</span></div>'
+            )
+        else:
+            _news_links_html += (
+                f'<div style="margin:3px 0;font-size:12px">• {_ttl}'
+                f' <span style="color:#94A3B8;font-size:11px">— {_src} ({_dt})</span></div>'
+            )
+    if not _news_links_html:
+        _news_links_html = '<div style="color:#6B7280;font-size:12px">No recent news articles found.</div>'
+
     # ── DSO hint ─────────────────────────────────────────────────────────────
     dso_str = f"{decision.dso_days:.0f} days" if decision.dso_days else "N/A"
 
@@ -276,9 +303,45 @@ def build_cfo_email(result: dict) -> Tuple[str, str]:
     </td>
   </tr>
 
+  <!-- ── COMPANY INTELLIGENCE ────────────────────────────────────────── -->
+  <tr>
+    <td style="background:#FFFFFF;padding:20px 28px 4px 28px">
+      <div style="background:#DBEAFE;border-left:4px solid #2274E0;border-radius:6px;padding:7px 14px;margin-bottom:12px">
+        <span style="font-size:12px;font-weight:800;color:#0F172A;text-transform:uppercase;letter-spacing:0.05em">🔍 Company Intelligence</span>
+      </div>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <!-- Overview -->
+          <td width="48%" style="vertical-align:top;padding-right:6px">
+            <div style="background:#F0F7FF;border-left:3px solid #2274E0;border-radius:7px;padding:10px 13px;margin-bottom:8px">
+              <div style="font-size:10px;font-weight:700;color:#2274E0;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">🏢 Company Overview</div>
+              <div style="font-size:12px;color:#1E3A5F;line-height:1.55">{_co_overview}</div>
+            </div>
+            <div style="background:#F5F3FF;border-left:3px solid #7C3AED;border-radius:7px;padding:10px 13px">
+              <div style="font-size:10px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">👥 Directors</div>
+              <div style="font-size:12px;color:#1E1A3F;line-height:1.55">{_co_directors}</div>
+            </div>
+          </td>
+          <td width="4%"></td>
+          <!-- Funding + News -->
+          <td width="48%" style="vertical-align:top;padding-left:6px">
+            <div style="background:#F0FDF4;border-left:3px solid #16A34A;border-radius:7px;padding:10px 13px;margin-bottom:8px">
+              <div style="font-size:10px;font-weight:700;color:#16A34A;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">💰 Recent Funding</div>
+              <div style="font-size:12px;color:#1A3A1E;line-height:1.55">{_co_funding}</div>
+            </div>
+            <div style="background:#FFFBEB;border-left:3px solid {sent_color_val};border-radius:7px;padding:10px 13px">
+              <div style="font-size:10px;font-weight:700;color:{sent_color_val};text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">{sent_dot} News Sentiment: {sentiment}</div>
+              <div style="color:#374151;line-height:1.55">{_news_links_html}</div>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
   <!-- ── MAIN CONTENT AREA ─────────────────────────────────────────── -->
   <tr>
-    <td style="background:#FFFFFF;border-radius:0 0 12px 12px;padding:24px 28px">
+    <td style="background:#FFFFFF;border-radius:0 0 12px 12px;padding:4px 28px 24px 28px">
 
       <!-- ── SECTION: Score Breakdown ──────────────────────────────── -->
       <div style="background:#DBEAFE;border-left:4px solid #2274E0;border-radius:6px;padding:7px 14px;margin-bottom:12px">
