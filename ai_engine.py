@@ -158,7 +158,7 @@ def _build_prompt(
       "suggested_conditions": ["condition if approving conditionally", ...],
       "company_overview": "Two-sentence description of what this company does, its sector, and its primary business model.",
       "funding_note": "Two-sentence note on any recent funding rounds, IPO activity, or major investments. Write 'No recent funding activity identified.' if none known.",
-      "directors_note": "Two-sentence note naming key directors or promoters and their background. Write 'Director information not available from provided data.' if unknown."
+      "directors_note": "Two-sentence note covering: (1) the owner/founder or parent group/conglomerate this company belongs to, and (2) the current MD/CEO or key promoter. Prioritise group ownership (e.g. 'Part of the Tata Group') over individual director names. Write 'Ownership information not available.' if nothing is known."
     }}
 
     Rules:

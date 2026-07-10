@@ -318,7 +318,7 @@ def build_cfo_email(result: dict) -> Tuple[str, str]:
               <div style="font-size:12px;color:#1E3A5F;line-height:1.55">{_co_overview}</div>
             </div>
             <div style="background:#F5F3FF;border-left:3px solid #7C3AED;border-radius:7px;padding:10px 13px">
-              <div style="font-size:10px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">👥 Directors</div>
+              <div style="font-size:10px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">👥 Ownership &amp; Leadership</div>
               <div style="font-size:12px;color:#1E1A3F;line-height:1.55">{_co_directors}</div>
             </div>
           </td>

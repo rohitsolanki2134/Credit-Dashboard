@@ -1818,8 +1818,8 @@ def render_snapshot(r: dict):
             )
             st.markdown(
                 f"<div style='background:#F5F3FF;border-left:3px solid #7C3AED;{_card}'>"
-                f"<div style='{_lbl};color:#7C3AED'>👥 Directors</div>"
-                f"<div style='color:#1E1A3F'>{ai.directors_note or 'Director information not available.'}</div>"
+                f"<div style='{_lbl};color:#7C3AED'>👥 Ownership & Leadership</div>"
+                f"<div style='color:#1E1A3F'>{ai.directors_note or 'Ownership information not available.'}</div>"
                 f"</div>",
                 unsafe_allow_html=True,
             )
