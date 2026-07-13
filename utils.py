@@ -19,7 +19,12 @@ import numpy as np
 # ---------------------------------------------------------------------------
 
 LOG_DIR = Path("logs")
-LOG_DIR.mkdir(exist_ok=True)
+try:
+    LOG_DIR.mkdir(exist_ok=True)
+except OSError:
+    # Read-only filesystem (e.g. Streamlit Cloud) — fall back to /tmp
+    LOG_DIR = Path("/tmp/credit_logs")
+    LOG_DIR.mkdir(exist_ok=True)
 
 
 def get_logger(name: str = "credit_dashboard") -> logging.Logger:
@@ -44,12 +49,15 @@ def get_logger(name: str = "credit_dashboard") -> logging.Logger:
     ch.setFormatter(fmt)
     logger.addHandler(ch)
 
-    # File handler (rotates daily by date suffix)
-    log_file = LOG_DIR / f"credit_{datetime.now().strftime('%Y%m%d')}.log"
-    fh = logging.FileHandler(log_file, encoding="utf-8")
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(fmt)
-    logger.addHandler(fh)
+    # File handler (rotates daily by date suffix) — optional; skip if FS is read-only
+    try:
+        log_file = LOG_DIR / f"credit_{datetime.now().strftime('%Y%m%d')}.log"
+        fh = logging.FileHandler(log_file, encoding="utf-8")
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(fmt)
+        logger.addHandler(fh)
+    except OSError:
+        pass
 
     return logger
 

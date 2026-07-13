@@ -3244,33 +3244,33 @@ def main():
 # ---------------------------------------------------------------------------
 
 _DEMO_PROFILES = {
-    # ₹ 100 Cr revenue — strong corporate client
+    # ₹ 500 Cr revenue — strong corporate client (above ₹200 Cr threshold)
     "good": {
         "company_name": "Apex Logistics International Pvt. Ltd.",
-        "revenue":             100_00_00_000,   # ₹ 100 Cr
-        "ebitda":               20_00_00_000,   # ₹  20 Cr
-        "net_profit":           11_50_00_000,   # ₹  11.5 Cr
-        "current_assets":       37_50_00_000,   # ₹  37.5 Cr
-        "current_liabilities":  15_00_00_000,   # ₹  15 Cr
-        "total_debt":           25_00_00_000,   # ₹  25 Cr
-        "equity":               50_00_00_000,   # ₹  50 Cr
-        "cash_and_equivalents":  7_50_00_000,   # ₹   7.5 Cr
-        "operating_cash_flow":  15_00_00_000,   # ₹  15 Cr
-        "interest_expense":      2_00_00_000,   # ₹   2 Cr
+        "revenue":            500_00_00_000,   # ₹ 500 Cr
+        "ebitda":             100_00_00_000,   # ₹ 100 Cr
+        "net_profit":          57_50_00_000,   # ₹  57.5 Cr
+        "current_assets":     187_50_00_000,   # ₹ 187.5 Cr
+        "current_liabilities": 75_00_00_000,   # ₹  75 Cr
+        "total_debt":         125_00_00_000,   # ₹ 125 Cr
+        "equity":             250_00_00_000,   # ₹ 250 Cr
+        "cash_and_equivalents":37_50_00_000,   # ₹  37.5 Cr
+        "operating_cash_flow": 75_00_00_000,   # ₹  75 Cr
+        "interest_expense":    10_00_00_000,   # ₹  10 Cr
     },
-    # ₹ 60 Cr revenue — mid-tier, mixed signals
+    # ₹ 220 Cr revenue — mid-tier, mixed signals (just above ₹200 Cr threshold)
     "average": {
         "company_name": "Meridian Travel Solutions Ltd.",
-        "revenue":             60_00_00_000,    # ₹ 60 Cr
-        "ebitda":               6_00_00_000,    # ₹  6 Cr
-        "net_profit":           2_25_00_000,    # ₹  2.25 Cr
-        "current_assets":      17_50_00_000,    # ₹ 17.5 Cr
-        "current_liabilities": 14_50_00_000,    # ₹ 14.5 Cr
-        "total_debt":          35_00_00_000,    # ₹ 35 Cr
-        "equity":              22_50_00_000,    # ₹ 22.5 Cr
-        "cash_and_equivalents": 2_00_00_000,    # ₹  2 Cr
-        "operating_cash_flow":  4_50_00_000,    # ₹  4.5 Cr
-        "interest_expense":     2_50_00_000,    # ₹  2.5 Cr
+        "revenue":            220_00_00_000,    # ₹ 220 Cr
+        "ebitda":              22_00_00_000,    # ₹  22 Cr
+        "net_profit":           8_25_00_000,    # ₹   8.25 Cr
+        "current_assets":      64_00_00_000,    # ₹  64 Cr
+        "current_liabilities": 53_00_00_000,    # ₹  53 Cr
+        "total_debt":         128_00_00_000,    # ₹ 128 Cr
+        "equity":              82_50_00_000,    # ₹  82.5 Cr
+        "cash_and_equivalents": 7_50_00_000,    # ₹   7.5 Cr
+        "operating_cash_flow": 16_50_00_000,    # ₹  16.5 Cr
+        "interest_expense":     9_00_00_000,    # ₹   9 Cr
     },
     # ₹ 25 Cr revenue — distressed, rejection scenario
     "risky": {
