@@ -1549,7 +1549,20 @@ def _run_pipeline(
             decision         = decision_dict,
             source_file      = "",
             parse_confidence = confidence,
-            ai_narrative     = ai.risk_narrative,
+            ai_narrative     = json.dumps({
+                "recommendation":       ai.recommendation,
+                "confidence_level":     ai.confidence_level,
+                "confidence_score":     ai.confidence_score,
+                "risk_narrative":       ai.risk_narrative,
+                "key_risks":            ai.key_risks,
+                "positive_factors":     ai.positive_factors,
+                "hidden_risks":         ai.hidden_risks,
+                "suggested_conditions": ai.suggested_conditions,
+                "model_used":           ai.model_used,
+                "company_overview":     ai.company_overview,
+                "funding_note":         ai.funding_note,
+                "directors_note":       ai.directors_note,
+            }),
             ai_confidence    = ai.confidence_score,
         )
 
